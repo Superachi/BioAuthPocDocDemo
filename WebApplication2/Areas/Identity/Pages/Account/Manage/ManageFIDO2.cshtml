@@ -1,0 +1,22 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Manage FIDO2 authenticator";
+    ViewData["ActivePage"] = ManageNavPages.ManageFIDO2;
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<script src="~/js/passwordless-client.js"></script>
+
+@if (Model.PasskeySecurityEnabled())
+{
+    <p>A FIDO2 authenticator has already been registered. You can unregister your device using the button below.</p>
+    <a asp-area="" asp-controller="Passwordless" asp-action="DeleteCredential">
+        <input type="button" class="btn btn-danger" value="Disable Webauthn" />
+    </a>
+} else {
+    <p>Register a FIDO2 authenticator to use as an additional authentication factor.</p>
+    <button id="passwordless-enable" class="btn btn-primary">Enable Webauthn</button>
+    <script src="~/js/passwordless-register.js"></script>
+}
