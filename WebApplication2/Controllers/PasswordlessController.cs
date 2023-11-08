@@ -33,6 +33,7 @@ namespace WebApplication2.Controllers
             if (API_SECRET == "<YOUR_API_SECRET>") throw new InvalidOperationException("Please set your API SECRET");
         }
 
+        [Authorize]
         // https://docs.passwordless.dev/guide/api.html#register-token
         public async Task<IActionResult> GetRegisterToken()
         {
@@ -79,6 +80,47 @@ namespace WebApplication2.Controllers
             {
                 StatusCode = (int)request.StatusCode
             };
+        }
+
+        [Authorize]
+        public async Task<IActionResult> DeleteCredential()
+        {
+            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ApplicationUser user = await _context.Users.FindAsync(userId);
+
+            if (userId != null) {
+                // Cancel the operation if the user isn't found or hardware security wasn't enabled
+                if (user == null || !user.PasskeySecurityEnabled) return BadRequest();
+
+                // Get a list of the associated credentials first
+                var payload = new { userId = userId };
+
+                var response = await _httpClient.PostAsJsonAsync("credentials/list", payload);
+                string responseBody = await response.Content.ReadAsStringAsync();
+                JObject json = JObject.Parse(responseBody);
+                bool isJsonEmpty = json["values"].IsNullOrEmpty();
+
+                if (!isJsonEmpty)
+                {
+                    string credentialId = (string)json["values"][0]["descriptor"]["id"];
+
+                    // Remove the credential
+                    var request = await _httpClient.PostAsJsonAsync("credentials/delete", new { credentialId = credentialId });
+                    if (request.IsSuccessStatusCode)
+                    {
+                        user.PasskeySecurityEnabled = false;
+                        await _context.SaveChangesAsync();
+                    }
+                } else
+                {
+                    // The response for the given userId was empty, meaning no credentials were found
+                    // Passkey security should still be disabled, as otherwise the user's account won't be able to add a new credentialmans
+                    user.PasskeySecurityEnabled = false;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+                return RedirectToAction(actionName: "Index", controllerName: "Home");
         }
 
         [Produces("application/json")]
