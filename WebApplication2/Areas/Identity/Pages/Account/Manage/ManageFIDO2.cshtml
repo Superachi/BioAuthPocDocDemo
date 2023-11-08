@@ -17,6 +17,21 @@
     </a>
 } else {
     <p>Register a FIDO2 authenticator to use as an additional authentication factor.</p>
-    <button id="passwordless-enable" class="btn btn-primary">Enable Webauthn</button>
+    <h2>How does this service process my biometric data?</h2>
+    <p>
+        FIDO2 stands for 'Fast Identity Online 2'. It is the standard that's used to add additional security to your account.
+        There are several authentication methods that are compatible with FIDO2, such as a PIN code or your biometric data.
+    </p>
+    <p>
+        In the case of the latter, <b>no biometric data is collected or stored on our servers</b>, as it's data that doesn't exit your authenticator.
+        What we do store is a credential that your authenticator generates whenever you register it to secure your account.
+        This credential is unique to this website, cannot be used elsewhere and is revokable.
+    </p>
+    <p>
+        You can read more about how FIDO2 works <a href="https://fidoalliance.org/how-fido-works/">here</a>.
+        For information about how biometric data is stored on your device, refer to the website of your device's manufacturer.
+        For example, this website was tested with biometrics using Windows Hello, which describes its storage method <a href="https://learn.microsoft.com/en-us/windows/security/identity-protection/hello-for-business/hello-biometrics-in-enterprise#where-is-windows-hello-data-stored">here</a>.
+    </p>
+    <button id="passwordless-enable" class="btn btn-primary">Register authenticator</button>
     <script src="~/js/passwordless-register.js"></script>
 }
