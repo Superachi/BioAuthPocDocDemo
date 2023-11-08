@@ -1,0 +1,14 @@
+﻿@page
+@model WebApplication2.Areas.Identity.Pages.Account.LoginWithPasskeyModel
+@{
+}
+
+<script src="~/js/passwordless-client.js"></script>
+<center>
+    <h1>Multifactor authentication via passkey</h1>
+    <h2>A passkey is required to complete the login process.</h2>
+    <p>To do so, please use the external (FIDO2 compatible) authenticator that has been registered with this account.</p>
+    <p id="email" hidden>@Model.UserEmail</p>
+    <button class="btn btn-primary" id="passwordless-signin">Authenticate using passkey</button>
+</center>
+<script src="~/js/passwordless-signin.js"></script>

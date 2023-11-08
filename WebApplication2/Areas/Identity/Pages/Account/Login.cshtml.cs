@@ -15,17 +15,21 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using WebApplication2.Areas.Identity.Data;
+using Microsoft.EntityFrameworkCore;
+using WebApplication2.Data;
 
 namespace WebApplication2.Areas.Identity.Pages.Account
 {
     public class LoginModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ApplicationDbContext _context;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ApplicationDbContext context, ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
+            _context = context;
             _logger = logger;
         }
 
@@ -110,9 +114,20 @@ namespace WebApplication2.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                // If passkey security is enabled, check the user's password, without signing in immediately if the password is correct
+                var user = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
+                if (user.PasskeySecurityEnabled)
+                {
+                    var passwordCheck = await _signInManager.CheckPasswordSignInAsync(user, Input.Password, false);
+                    if (passwordCheck.Succeeded)
+                    {
+                        return RedirectToPage("./LoginWithPasskey", new { UserEmail = Input.Email, ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
+                    }
+                }
+
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
