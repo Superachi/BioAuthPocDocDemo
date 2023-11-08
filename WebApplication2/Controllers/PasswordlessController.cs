@@ -1,10 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Security.Claims;
 using WebApplication2.Areas.Identity.Data;
 using WebApplication2.Data;
+using WebApplication2.ViewModels;
 
 namespace WebApplication2.Controllers
 {
@@ -76,6 +79,38 @@ namespace WebApplication2.Controllers
             {
                 StatusCode = (int)request.StatusCode
             };
+        }
+
+        [Produces("application/json")]
+        [HttpPost]
+        public async Task<IActionResult> SignIn([FromBody] PasskeySigninViewModel viewModel)
+        {
+            if (viewModel.Token == null) return BadRequest("No sign in verification token was provided.");
+
+            // Send the registration token to the API and verify the login
+            var payload = new { token = viewModel.Token };
+            var response = await _httpClient.PostAsJsonAsync("/signin/verify", payload);
+
+            try
+            {
+                string responseBody = await response.Content.ReadAsStringAsync();
+                JObject json = JObject.Parse(responseBody);
+                bool success = (bool)json["success"];
+                string userId = (string)json["userId"];
+
+                ApplicationUser? user = await _context.Users.FindAsync(userId);
+                if (user != null && success)
+                {
+                    await _signInManager.SignInAsync(user, true);
+                    return StatusCode(StatusCodes.Status200OK, "Succesful signin.");
+                }
+                
+                return BadRequest("Something went wrong.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occured when trying to proces the login request.");
+            }
         }
     }
 }
