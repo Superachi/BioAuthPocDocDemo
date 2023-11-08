@@ -32,6 +32,7 @@
                     console.error(registration.error);
                     return { error: registration.error };
                 }
+                console.log(registration.data);
                 registration.data.challenge = base64UrlToArrayBuffer(registration.data.challenge);
                 registration.data.user.id = base64UrlToArrayBuffer(registration.data.user.id);
                 (_a = registration.data.excludeCredentials) === null || _a === void 0 ? void 0 : _a.forEach((cred) => {
@@ -49,6 +50,7 @@
                     console.error(error);
                     return { error };
                 }
+                
                 return await this.registerComplete(credential, registration.session, credentialNickname);
                 // next steps
                 // return a token from the API
